@@ -1510,7 +1510,7 @@ function imprimirPresupuesto(){
   const box=document.getElementById('pres-preview-box');
   if(!box||box.innerHTML.includes('Completá'))return alert('Primero generá el presupuesto');
   const win=window.open('','_blank');
-  win.document.write(`<html><head><title>Presupuesto</title></head><body style="font-family:Georgia,serif;padding:2cm;max-width:800px;margin:0 auto">${box.innerHTML}
+  win.document.write('<html><head><title>Presupuesto</title></head><body style="font-family:Georgia,serif;padding:2cm;max-width:800px;margin:0 auto">'+box.innerHTML+'
 <!-- MOBILE BOTTOM NAV -->
 <div class="mob-overlay" id="mob-overlay" onclick="closeMobMore()"></div>
 <div class="mob-more-menu" id="mob-more-menu">
@@ -1526,7 +1526,7 @@ function imprimirPresupuesto(){
     <div class="mob-more-item" onclick="mobNav('pedidos')"><span>📋</span><span>Pedidos</span></div>
   </div>
 </div>
-<nav class="mob-nav">
+<nav class="mob-nav" id="mob-nav">
   <div class="mob-nav-items">
     <div class="mob-nav-item active" id="mob-dashboard" onclick="mobNav('dashboard')"><span>📊</span><span>Inicio</span></div>
     <div class="mob-nav-item" id="mob-ventas" onclick="mobNav('ventas')"><span>💰</span><span>Ventas</span></div>
@@ -1538,7 +1538,7 @@ function imprimirPresupuesto(){
   </div>
 </nav>
 
-</body></html>`);
+</body></html>');
   win.document.close();win.print();
 }
 
