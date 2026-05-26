@@ -187,7 +187,8 @@ tr:hover td{background:#fdfdf9}
 
   <div class="sidebar-section">
     <div class="nav-section" style="padding:.3rem 0 .4rem">Respaldo local</div>
-    <button class="btn btnsm btnp" style="width:100%;margin-bottom:5px;font-size:11px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.15)" onclick="exportarDatos()">⬇️ Exportar backup</button>
+    <button class="btn btnsm btnp" style="width:100%;margin-bottom:5px;font-size:11px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.15)" onclick="exportarDatos()">⬇️ Backup JSON</button>
+    <button class="btn btnsm" style="width:100%;margin-bottom:5px;font-size:11px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.15)" onclick="exportarExcel()">📊 Exportar Excel</button>
     <button class="btn btnsm" style="width:100%;margin-bottom:5px;font-size:11px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.15)" onclick="document.getElementById('import-input').click()">⬆️ Importar backup</button>
     <input type="file" id="import-input" accept=".json" style="display:none" onchange="importarDatos(this)"/>
     <button class="btn btnsm" style="width:100%;font-size:11px;background:transparent;color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.1)" onclick="abrirModalInfo()">ℹ️ Info almacenamiento</button>
@@ -1585,6 +1586,79 @@ function closeMobMore(){
   document.getElementById('mob-more').classList.remove('active');
 }
 
+
+// ═══ EXPORTAR EXCEL ═══
+function exportarExcel() {
+  // Construir CSV de cada sección y descargar como archivo HTML tabla (compatible universal)
+  const fecha = new Date();
+  const fn = `secretos_manigua_${fecha.getFullYear()}-${fecha.getMonth()+1}-${fecha.getDate()}.xls`;
+
+  const fmtDate = d => d || '';
+  const fmtNum = n => parseFloat(n||0).toFixed(2);
+
+  // Ventas
+  let html = '<html><head><meta charset="utf-8"></head><body>';
+
+  // Hoja Ventas
+  html += '<table border="1"><tr><td colspan="9" style="background:#1E4A0F;color:white;font-size:16px;font-weight:bold">VENTAS — Secretos de la Manigua</td></tr>';
+  html += '<tr style="background:#EAF3DE;font-weight:bold"><td>Fecha</td><td>Producto</td><td>Cliente</td><td>Cantidad</td><td>Precio Unit.</td><td>Descuento%</td><td>Total</td><td>Ganancia</td><td>Canal</td></tr>';
+  S.ventas.forEach(v => {
+    const total = v.cant*v.precio*(1-(v.descuento||0)/100);
+    const gan = v.cant*(v.precio*(1-(v.descuento||0)/100)-v.costo);
+    html += `<tr><td>${fmtDate(v.fecha)}</td><td>${v.prodNombre}</td><td>${v.clienteNombre}</td><td>${v.cant}</td><td>${fmtNum(v.precio)}</td><td>${v.descuento||0}</td><td>${fmtNum(total)}</td><td>${fmtNum(gan)}</td><td>${v.canal}</td></tr>`;
+  });
+  const tvT = S.ventas.reduce((a,v)=>a+v.cant*v.precio*(1-(v.descuento||0)/100),0);
+  const tgT = S.ventas.reduce((a,v)=>a+v.cant*(v.precio*(1-(v.descuento||0)/100)-v.costo),0);
+  html += `<tr style="background:#f0f9e8;font-weight:bold"><td colspan="6">TOTAL</td><td>${fmtNum(tvT)}</td><td>${fmtNum(tgT)}</td><td></td></tr>`;
+  html += '</table><br>';
+
+  // Hoja Productos
+  html += '<table border="1"><tr><td colspan="7" style="background:#1E4A0F;color:white;font-size:16px;font-weight:bold">PRODUCTOS</td></tr>';
+  html += '<tr style="background:#EAF3DE;font-weight:bold"><td>Nombre</td><td>Categoría</td><td>Stock</td><td>Stock Mínimo</td><td>Precio Venta</td><td>Costo</td><td>Margen%</td></tr>';
+  S.productos.forEach(p => {
+    const ce = calcCR(p.receta)>0?calcCR(p.receta):p.costo;
+    const m = p.precio>0?Math.round((p.precio-ce)/p.precio*100):0;
+    html += `<tr><td>${p.nombre}</td><td>${p.cat}</td><td>${p.stock}</td><td>${p.min}</td><td>${fmtNum(p.precio)}</td><td>${fmtNum(ce)}</td><td>${m}%</td></tr>`;
+  });
+  html += '</table><br>';
+
+  // Hoja Insumos
+  html += '<table border="1"><tr><td colspan="7" style="background:#1E4A0F;color:white;font-size:16px;font-weight:bold">INSUMOS</td></tr>';
+  html += '<tr style="background:#EAF3DE;font-weight:bold"><td>Nombre</td><td>Tipo</td><td>Unidad</td><td>Stock</td><td>Stock Mínimo</td><td>Costo/unidad</td><td>Vencimiento</td></tr>';
+  S.insumos.forEach(i => {
+    html += `<tr><td>${i.nombre}</td><td>${i.tipo||''}</td><td>${i.unidad}</td><td>${i.stock}</td><td>${i.min}</td><td>${fmtNum(i.costo)}</td><td>${i.vencimiento||''}</td></tr>`;
+  });
+  html += '</table><br>';
+
+  // Hoja Clientes
+  html += '<table border="1"><tr><td colspan="5" style="background:#1E4A0F;color:white;font-size:16px;font-weight:bold">CLIENTES</td></tr>';
+  html += '<tr style="background:#EAF3DE;font-weight:bold"><td>Nombre</td><td>Teléfono</td><td>Instagram</td><td>Origen</td><td>Notas</td></tr>';
+  S.clientes.forEach(c2 => {
+    html += `<tr><td>${c2.nombre}</td><td>${c2.tel||''}</td><td>${c2.ig||''}</td><td>${c2.origen||''}</td><td>${c2.notas||''}</td></tr>`;
+  });
+  html += '</table><br>';
+
+  // Hoja Gastos
+  html += '<table border="1"><tr><td colspan="4" style="background:#1E4A0F;color:white;font-size:16px;font-weight:bold">GASTOS</td></tr>';
+  html += '<tr style="background:#EAF3DE;font-weight:bold"><td>Fecha</td><td>Descripción</td><td>Categoría</td><td>Monto</td></tr>';
+  S.gastos.forEach(g => {
+    html += `<tr><td>${fmtDate(g.fecha)}</td><td>${g.desc}</td><td>${g.cat}</td><td>${fmtNum(g.monto)}</td></tr>`;
+  });
+  const tgas = S.gastos.reduce((a,g)=>a+g.monto,0);
+  html += `<tr style="background:#f0f9e8;font-weight:bold"><td colspan="3">TOTAL</td><td>${fmtNum(tgas)}</td></tr>`;
+  html += '</table>';
+
+  html += '</body></html>';
+
+  const blob = new Blob([html], {type:'application/vnd.ms-excel'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fn;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setVS('Excel exportado ✓', 'success');
+}
+
 // INICIO
 // ═══════════════════════════════════════════
 // Esperar que el DOM esté completamente listo
@@ -1622,7 +1696,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="mob-more-item" onclick="mobNav('pedidos')"><span>📋</span><span>Pedidos</span></div>
     <div class="mob-more-item" onclick="closeMobMore();abrirModalNube()"><span>☁️</span><span>Nube</span></div>
     <div class="mob-more-item" onclick="closeMobMore();sincronizarDesdeNube()"><span>🔄</span><span>Sincronizar</span></div>
-    <div class="mob-more-item" onclick="closeMobMore();exportarDatos()"><span>⬇️</span><span>Backup</span></div>
+    <div class="mob-more-item" onclick="closeMobMore();exportarDatos()"><span>⬇️</span><span>Backup JSON</span></div>
+    <div class="mob-more-item" onclick="closeMobMore();exportarExcel()"><span>📊</span><span>Excel</span></div>
     <div class="mob-more-item" onclick="closeMobMore();document.getElementById('import-input').click()"><span>⬆️</span><span>Importar</span></div>
   </div>
 </div>
