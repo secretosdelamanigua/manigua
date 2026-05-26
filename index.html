@@ -1620,6 +1620,10 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="mob-more-item" onclick="mobNav('precio')"><span>🧮</span><span>Precio</span></div>
     <div class="mob-more-item" onclick="mobNav('gastos')"><span>💸</span><span>Gastos</span></div>
     <div class="mob-more-item" onclick="mobNav('pedidos')"><span>📋</span><span>Pedidos</span></div>
+    <div class="mob-more-item" onclick="closeMobMore();abrirModalNube()"><span>☁️</span><span>Nube</span></div>
+    <div class="mob-more-item" onclick="closeMobMore();sincronizarDesdeNube()"><span>🔄</span><span>Sincronizar</span></div>
+    <div class="mob-more-item" onclick="closeMobMore();exportarDatos()"><span>⬇️</span><span>Backup</span></div>
+    <div class="mob-more-item" onclick="closeMobMore();document.getElementById('import-input').click()"><span>⬆️</span><span>Importar</span></div>
   </div>
 </div>
 <nav class="mob-nav">
